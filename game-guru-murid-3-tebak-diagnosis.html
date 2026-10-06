@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Game Guru & Murid #3 - Tebak Diagnosis Motor</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:linear-gradient(135deg,#0b1220,#1e293b);color:#fff;min-height:100vh}
+.app{width:min(780px,100%);margin:auto;padding:18px}header{text-align:center;padding:10px 0 18px}
+.logo{display:inline-block;background:#f59e0b;color:#111;padding:7px 14px;border-radius:999px;font-weight:900;font-size:12px}
+h1{font-size:28px;margin:12px 0 5px}.subtitle{color:#cbd5e1;font-size:14px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:12px}.stat{background:#172338;border:1px solid #334155;border-radius:16px;text-align:center;padding:11px}.stat b{display:block;font-size:21px}.stat span{font-size:11px;color:#94a3b8}
+.card{background:#162238;border:1px solid #334155;border-radius:20px;padding:16px;box-shadow:0 12px 30px rgba(0,0,0,.22)}
+.progress{height:7px;background:#334155;border-radius:99px;overflow:hidden;margin-bottom:15px}.progress div{height:100%;background:#f59e0b;width:0;transition:.3s}
+.icon{height:125px;background:#0d1728;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:70px;margin-bottom:16px}
+.question{font-size:19px;line-height:1.45;font-weight:800;margin-bottom:15px}.answers{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.answer{min-height:56px;border-radius:13px;border:1px solid #40516b;background:#263752;color:#fff;padding:10px 12px;font-weight:800;cursor:pointer}.answer:hover{background:#304663}
+.answer.correct{background:#166534;border-color:#22c55e}.answer.wrong{background:#991b1b;border-color:#ef4444}.answer:disabled{cursor:default}
+.feedback{min-height:48px;padding:10px 2px 2px;font-size:14px;font-weight:700;line-height:1.45}.result{text-align:center;padding:10px 0}.result h2{font-size:26px}.score{font-size:58px;font-weight:900;color:#f59e0b;margin:8px 0}.badge{font-size:20px;font-weight:900;margin:8px 0 18px}
+button.action{border:0;border-radius:12px;padding:12px 16px;font-weight:900;cursor:pointer;margin:5px}.primary{background:#f59e0b;color:#111}.secondary{background:#2563eb;color:#fff}.hidden{display:none}.note{text-align:center;color:#94a3b8;font-size:12px;margin-top:10px}
+@media(max-width:600px){h1{font-size:24px}.answers{grid-template-columns:1fr}.question{font-size:18px}}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+<div class="logo">GAME GURU & MURID #3</div>
+<h1>TEBAK DIAGNOSIS MOTOR 🏍️</h1>
+<div class="subtitle">Baca gejala • Analisis penyebab • Pilih pemeriksaan yang paling tepat • 10 soal</div>
+</header>
+
+<div id="game">
+<div class="stats"><div class="stat"><b id="score">0</b><span>SKOR</span></div><div class="stat"><b id="number">1/10</b><span>SOAL</span></div><div class="stat"><b id="timer">15</b><span>DETIK</span></div></div>
+<div class="card">
+<div class="progress"><div id="bar"></div></div>
+<div class="icon" id="icon">🔍</div>
+<div class="question" id="question"></div>
+<div class="answers" id="answers"></div>
+<div class="feedback" id="feedback"></div>
+</div>
+<div class="note">Jangan menebak komponen. Gunakan alur: GEJALA → PEMERIKSAAN → PENGUKURAN → ANALISIS.</div>
+</div>
+
+<div id="result" class="card hidden result">
+<div class="icon">🏆</div><h2>DIAGNOSIS SELESAI!</h2>
+<div class="score" id="finalScore">0</div><div>POIN</div>
+<div class="badge" id="badge"></div><p id="message"></p>
+<button class="action primary" onclick="shareFacebook()">📘 Bagikan ke Facebook</button>
+<button class="action secondary" onclick="shareResult()">📤 Bagikan Hasil</button>
+<button class="action primary" onclick="restart()">🔄 Main Lagi</button>
+</div>
+</div>
+
+<script>
+const questions=[
+{q:"Motor injeksi sulit hidup pada pagi hari. Langkah awal yang paling tepat adalah...",i:"🌅",a:["Langsung mengganti ECU","Memeriksa gejala, kondisi aki, dan sistem bahan bakar","Mengganti semua sensor","Menaikkan putaran mesin dengan tangan"],c:1},
+{q:"Mesin brebet saat akselerasi. Sebelum mengganti injector, teknisi sebaiknya...",i:"⚠️",a:["Menebak injector rusak","Melakukan pemeriksaan dan pengukuran sesuai gejala","Mengganti busi dan injector sekaligus","Menghapus semua data ECU"],c:1},
+{q:"Starter elektrik berputar lambat. Komponen pertama yang layak diperiksa adalah...",i:"🔋",a:["Aki dan tegangan saat starter","Knalpot","Spion","Lampu sein saja"],c:0},
+{q:"Mesin cepat panas, tetapi coolant masih tersedia. Pemeriksaan yang logis adalah...",i:"🌡️",a:["Langsung mengganti piston","Memeriksa sirkulasi coolant, thermostat, dan kipas","Mengganti ban","Menambah oli sampai penuh"],c:1},
+{q:"Lampu check engine menyala. Tindakan diagnosis yang paling tepat adalah...",i:"💡",a:["Menutup lampu indikator","Membaca kode gangguan dan melakukan pemeriksaan lanjutan","Langsung mengganti ECU","Melepas aki tanpa pemeriksaan"],c:1},
+{q:"Motor terasa berat dan konsumsi BBM meningkat. Data yang membantu analisis sistem injeksi adalah...",i:"⛽",a:["Warna bodi","Data sensor dan kondisi sistem bahan bakar","Ukuran ban saja","Nomor rangka saja"],c:1},
+{q:"Busi berwarna sangat hitam dan mesin kurang optimal. Kesimpulan terbaik adalah...",i:"🔧",a:["Pasti piston rusak","Ada indikasi campuran terlalu kaya, tetapi perlu pemeriksaan penyebab","Pasti aki lemah","Pasti rem blong"],c:1},
+{q:"Setelah perbaikan, langkah terakhir troubleshooting adalah...",i:"✅",a:["Langsung menyerahkan motor","Menguji kembali untuk memastikan gejala hilang dan sistem bekerja normal","Menghapus catatan pekerjaan","Mengganti komponen lain tanpa alasan"],c:1},
+{q:"Jika hasil pengukuran tidak sesuai spesifikasi, teknisi sebaiknya...",i:"📏",a:["Mengabaikan hasil ukur","Membandingkan dengan spesifikasi dan menganalisis penyebab","Mengubah angka hasil ukur","Menebak komponen rusak"],c:1},
+{q:"Prinsip utama troubleshooting yang benar adalah...",i:"🧠",a:["Tebak → ganti → selesai","Gejala → pemeriksaan → pengukuran → analisis → perbaikan → pengujian","Ganti semua komponen","Ikuti perkiraan teman"],c:1}
+];
+let current=0,score=0,timer=15,interval=null,locked=false;
+function shuffle(arr){return arr.map(x=>({x,r:Math.random()})).sort((a,b)=>a.r-b.r).map(o=>o.x)}
+function render(){
+locked=false;timer=15;document.getElementById("number").textContent=`${current+1}/10`;document.getElementById("score").textContent=score;document.getElementById("timer").textContent=timer;document.getElementById("bar").style.width=`${current/10*100}%`;
+const q=questions[current];document.getElementById("icon").textContent=q.i;document.getElementById("question").textContent=q.q;document.getElementById("feedback").textContent="";
+const list=q.a.map((text,idx)=>({text,idx}));shuffle(list);const box=document.getElementById("answers");box.innerHTML="";
+list.forEach((item,n)=>{const b=document.createElement("button");b.className="answer";b.textContent=String.fromCharCode(65+n)+". "+item.text;b.onclick=()=>answer(item.idx,b);box.appendChild(b)});
+clearInterval(interval);interval=setInterval(()=>{timer--;document.getElementById("timer").textContent=timer;if(timer<=0){clearInterval(interval);answer(-1,null)}},1000);
+}
+function answer(choice,clicked){
+if(locked)return;locked=true;clearInterval(interval);const q=questions[current];document.querySelectorAll(".answer").forEach(b=>b.disabled=true);
+if(choice===q.c){score+=10;if(clicked)clicked.classList.add("correct");document.getElementById("feedback").textContent="✅ Benar! Diagnosis dimulai dari data dan pemeriksaan, bukan tebakan."}
+else{if(clicked)clicked.classList.add("wrong");document.getElementById("feedback").textContent=choice===-1?"⏰ Waktu habis!":"❌ Belum tepat. Ingat: jangan langsung mengganti komponen tanpa pemeriksaan."}
+document.getElementById("score").textContent=score;setTimeout(()=>{current++;if(current<10)render();else finish()},900);
+}
+function finish(){
+document.getElementById("game").classList.add("hidden");document.getElementById("result").classList.remove("hidden");document.getElementById("finalScore").textContent=score;
+let badge,msg;if(score>=90){badge="🏆 MASTER TROUBLESHOOTING";msg="Luar biasa! Kamu berpikir seperti teknisi yang mengandalkan data."}else if(score>=70){badge="⭐ TEKNISI TELITI";msg="Bagus! Tinggal meningkatkan ketelitian dalam analisis."}else if(score>=50){badge="🔧 CALON TEKNISI";msg="Dasar diagnosis sudah ada. Terus latih alur troubleshooting."}else{badge="🛠️ PEJUANG DIAGNOSIS";msg="Jangan menyerah. Ingat: jangan menebak, periksa dan ukur."}
+document.getElementById("badge").textContent=badge;document.getElementById("message").textContent=msg;
+}
+function shareFacebook(){const text=`Saya mendapat ${score}/100 poin di Game Guru & Murid #3 - Tebak Diagnosis Motor! Berani coba?`;window.open("https://www.facebook.com/sharer/sharer.php?u="+encodeURIComponent(location.href)+"&quote="+encodeURIComponent(text),"_blank")}
+function shareResult(){const text=`Saya mendapat ${score}/100 poin — ${document.getElementById("badge").textContent} di Game Guru & Murid #3: Tebak Diagnosis Motor!`;if(navigator.share){navigator.share({title:"Game Guru & Murid #3",text,url:location.href}).catch(()=>{})}else{navigator.clipboard?.writeText(text+" "+location.href);alert("Hasil sudah disalin. Silakan tempel di Facebook.")}}
+function restart(){current=0;score=0;document.getElementById("result").classList.add("hidden");document.getElementById("game").classList.remove("hidden");render()}
+render();
+</script>
+</body>
+</html>
